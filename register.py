@@ -1,12 +1,10 @@
 import streamlit as st
 from supabase import create_client, Client
 
-# Configurazione Supabase
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Stesso CSS per coerenza grafica
 st.markdown("""
 <style>
     .container {
@@ -66,7 +64,6 @@ def show_register_page():
         elif password != confirm_password:
             st.error("Le password non corrispondono.")
         else:
-            # Controllo duplicati email e telefono
             existing_email = supabase.table('allowed_users').select('email').eq('email', email).execute()
             existing_phone = supabase.table('allowed_users').select('phone_encrypted').eq('phone_encrypted', phone).execute()
             if existing_email.data and len(existing_email.data) > 0:
@@ -91,7 +88,7 @@ def show_register_page():
 
     if st.button("Torna al login"):
         st.session_state.page = "login"
-        st.experimental_rerun()
+        # Non chiamiamo st.experimental_rerun(), Streamlit aggiornerà la pagina automaticamente
 
     st.markdown("</div>", unsafe_allow_html=True)
 
