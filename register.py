@@ -1,55 +1,15 @@
 import streamlit as st
 from supabase import create_client, Client
+import layout
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-st.markdown("""
-<style>
-    .container {
-        max-width: 400px;
-        margin: 40px auto 0 auto;
-        padding: 20px 30px 30px 30px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        border-radius: 12px;
-        background-color: #ffffff;
-    }
-    .stTextInput>div>div>input {
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        padding: 10px;
-        font-size: 16px;
-        transition: border-color 0.3s ease;
-    }
-    .stTextInput>div>div>input:focus {
-        border-color: #4CAF50;
-        outline: none;
-    }
-    .stButton>button {
-        background-color: #4CAF50;
-        color: white;
-        border-radius: 8px;
-        padding: 12px 24px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        width: 100%;
-    }
-    .stButton>button:hover {
-        background-color: #45a049;
-    }
-    h1 {
-        text-align: center;
-        color: #4CAF50;
-        margin-bottom: 10px;
-    }
-</style>
-""", unsafe_allow_html=True)
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def show_register_page():
-    st.markdown("<div class='container'>", unsafe_allow_html=True)
-    st.markdown("<h1>Registrazione Nuovo Utente</h1>", unsafe_allow_html=True)
+    layout.apply_global_style()
+    layout.page_title("Registrazione Nuovo Utente")
+    layout.page_container_start()
 
     first_name = st.text_input("Nome")
     last_name = st.text_input("Cognome")
@@ -88,9 +48,8 @@ def show_register_page():
 
     if st.button("Torna al login"):
         st.session_state.page = "login"
-        # Non chiamiamo st.experimental_rerun(), Streamlit aggiornerà la pagina automaticamente
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    layout.page_container_end()
 
 if __name__ == "__main__":
     show_register_page()
