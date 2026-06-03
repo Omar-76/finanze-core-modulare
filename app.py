@@ -9,16 +9,13 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # CSS personalizzato per stile e rimozione spazio bianco superiore
 st.markdown("""
 <style>
-    /* Rimuove margine e padding superiori della pagina */
     .css-18e3th9 {
         padding-top: 0rem;
         margin-top: 0rem;
     }
-    /* Nasconde eventuali header vuoti */
     header {
         display: none;
     }
-    /* Stile container centrale */
     .container {
         max-width: 400px;
         margin: 40px auto 0 auto;
@@ -27,7 +24,6 @@ st.markdown("""
         border-radius: 12px;
         background-color: #ffffff;
     }
-    /* Input con bordi arrotondati e focus verde */
     .stTextInput>div>div>input {
         border-radius: 8px;
         border: 1px solid #ccc;
@@ -39,7 +35,6 @@ st.markdown("""
         border-color: #4CAF50;
         outline: none;
     }
-    /* Pulsanti verdi con effetto hover */
     .stButton>button {
         background-color: #4CAF50;
         color: white;
@@ -53,7 +48,6 @@ st.markdown("""
     .stButton>button:hover {
         background-color: #45a049;
     }
-    /* Messaggi con colori distinti */
     .message {
         border-radius: 8px;
         padding: 12px;
@@ -75,13 +69,11 @@ st.markdown("""
         color: #856404;
         border: 1px solid #ffeeba;
     }
-    /* Titolo principale */
     h1 {
         text-align: center;
         color: #4CAF50;
         margin-bottom: 10px;
     }
-    /* Sottotitolo */
     h3 {
         text-align: center;
         color: #333;
@@ -139,7 +131,7 @@ def main():
             st.markdown("---")
             if st.button("Registrati"):
                 st.session_state.page = "register"
-                st.experimental_rerun()
+                # Non chiamiamo st.experimental_rerun() qui, Streamlit aggiornerà la pagina automaticamente
 
             st.markdown("</div>", unsafe_allow_html=True)
 
@@ -147,7 +139,7 @@ def main():
             st.markdown(f"<h2 style='text-align:center; color:#4CAF50;'>Benvenuto {st.session_state['user'].email}!</h2>", unsafe_allow_html=True)
             if st.button("Logout"):
                 st.session_state.pop("user")
-                st.experimental_rerun()
+                # Non chiamiamo st.experimental_rerun() qui, Streamlit aggiornerà la pagina automaticamente
 
     elif st.session_state.page == "register":
         import register
