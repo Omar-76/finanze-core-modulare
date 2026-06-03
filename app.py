@@ -1,10 +1,13 @@
 import streamlit as st
 from supabase import create_client, Client
 import layout
+import admin  # Importiamo il modulo admin separato
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+ADMIN_EMAIL = "omarcorio@libero.it"  # Sostituisci con la tua email reale
 
 def send_password_reset(email: str):
     try:
@@ -21,9 +24,14 @@ def main():
         st.session_state.page = "login"
 
     layout.apply_global_style()
-    layout.page_title("Gestione Spese e Budget Personale e Condiviso")
+
+    if "user" in st.session_state:
+        user_email = st.session_state["user"].email
+        if user_email == ADMIN_EMAIL:
+            st.session_state.page = "admin"
 
     if st.session_state.page == "login":
+        layout.page_title("Gestione Spese e Budget Personale e Condiviso")
         if "user" not in st.session_state:
             layout.page_container_start()
 
@@ -38,6 +46,10 @@ def main():
                         if user.user is not None:
                             st.session_state["user"] = user.user
                             st.success("Login effettuato con successo!")
+                            if user.user.email == ADMIN_EMAIL:
+                                st.session_state.page = "admin"
+                            else:
+                                st.session_state.page = "login"
                         else:
                             st.error("Email o password errati")
                     except Exception as e:
@@ -66,6 +78,9 @@ def main():
     elif st.session_state.page == "register":
         import register
         register.show_register_page()
+
+    elif st.session_state.page == "admin":
+        admin.show_admin_page(supabase)
 
 if __name__ == "__main__":
     main()
