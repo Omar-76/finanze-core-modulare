@@ -8,12 +8,14 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 def send_password_reset(email: str):
     try:
         response = supabase.auth.reset_password_for_email(email)
-        if response.get("error"):
-            st.error(f"Errore: {response['error']['message']}")
+        # Controlla se response ha attributo error
+        if hasattr(response, "error") and response.error:
+            st.error(f"Errore: {response.error.message}")
         else:
             st.success("Link per il reset della password inviato via email.")
     except Exception as e:
         st.error(f"Errore durante l'invio del link: {e}")
+
 
 def login():
     st.title("Login")
