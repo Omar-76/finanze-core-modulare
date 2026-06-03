@@ -27,8 +27,12 @@ def main():
 
     if "user" in st.session_state:
         user_email = st.session_state["user"].email
+        st.write(f"DEBUG: utente in sessione: {user_email}")
         if user_email == ADMIN_EMAIL:
             st.session_state.page = "admin"
+            st.write("DEBUG: pagina impostata su admin")
+        else:
+            st.write("DEBUG: pagina impostata su login")
 
     if st.session_state.page == "login":
         layout.page_title("Gestione Spese e Budget Personale e Condiviso")
@@ -46,10 +50,13 @@ def main():
                         if user.user is not None:
                             st.session_state["user"] = user.user
                             st.success("Login effettuato con successo!")
+                            st.write(f"DEBUG: utente loggato: {user.user.email}")
                             if user.user.email == ADMIN_EMAIL:
                                 st.session_state.page = "admin"
+                                st.write("DEBUG: pagina impostata su admin")
                             else:
                                 st.session_state.page = "login"
+                                st.write("DEBUG: pagina impostata su login")
                         else:
                             st.error("Email o password errati")
                     except Exception as e:
@@ -74,6 +81,8 @@ def main():
             st.markdown(f"<h2 style='text-align:center; color:#4CAF50;'>Benvenuto {st.session_state['user'].email}!</h2>", unsafe_allow_html=True)
             if st.button("Logout"):
                 st.session_state.pop("user")
+                st.session_state.page = "login"
+                st.experimental_rerun()
 
     elif st.session_state.page == "register":
         import register
