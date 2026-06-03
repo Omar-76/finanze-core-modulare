@@ -2,6 +2,7 @@ import streamlit as st
 import layout
 
 def show_admin_page(supabase):
+    st.write("DEBUG: show_admin_page chiamata")
     layout.page_title("Pannello Amministratore")
     layout.page_container_start()
 
