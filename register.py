@@ -18,33 +18,28 @@ def show_register_page():
     password = st.text_input("Password", type="password")
     confirm_password = st.text_input("Conferma Password", type="password")
 
-    if st.button("Registrati"):
-        if not (first_name and last_name and email and phone and password and confirm_password):
-            st.warning("Compila tutti i campi.")
-        elif password != confirm_password:
-            st.error("Le password non corrispondono.")
-        else:
-            existing_email = supabase.table('allowed_users').select('email').eq('email', email).execute()
-            existing_phone = supabase.table('allowed_users').select('phone_encrypted').eq('phone_encrypted', phone).execute()
-            if existing_email.data and len(existing_email.data) > 0:
-                st.error("Email già registrata.")
-            elif existing_phone.data and len(existing_phone.data) > 0:
-                st.error("Numero di telefono già registrato.")
-            else:
-                try:
-                    user = supabase.auth.sign_up({"email": email, "password": password})
-                    if user.user is not None:
-                        supabase.table('allowed_users').insert({
-                            'email': email,
-                            'first_name': first_name,
-                            'last_name': last_name,
-                            'phone_encrypted': phone
-                        }).execute()
-                        st.success("Registrazione avvenuta con successo! Controlla la tua email per la verifica.")
-                    else:
-                        st.error("Errore durante la registrazione.")
-                except Exception as e:
-                    st.error(f"Errore durante la registrazione: {e}")
+    # Pulsante Registrati rimosso o spostato se vuoi
+
+    # Recupera i piani di abbonamento dal DB
+    try:
+        response = supabase.table('subscription_plans').select('*').execute()
+        plans = response.data if response.data else []
+    except Exception as e:
+        st.error(f"Errore nel recupero dei piani di abbonamento: {e}")
+        plans = []
+
+    st.markdown("---")
+    st.subheader("Scegli un piano di abbonamento")
+
+    if plans:
+        for plan in plans:
+            st.markdown(f"**{plan.get('plan_type', 'Piano')}**")
+            st.markdown(f"- Prezzo: €{plan.get('price_euro', 'N/A')}")
+            st.markdown(f"- Durata: {plan.get('duration_days', 'N/A')} giorni")
+            st.markdown(f"- Descrizione: {plan.get('description', '')}")
+            st.markdown("---")
+    else:
+        st.info("Nessun piano di abbonamento disponibile al momento.")
 
     if st.button("Torna al login"):
         st.session_state.page = "login"
