@@ -91,91 +91,62 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-def send_password_reset(email: str):
-    try:
-        response = supabase.auth.reset_password_for_email(email)
-        if hasattr(response, "error") and response.error:
-            st.error(f"Errore: {response.error.message}")
-        else:
-            st.success("Link per il reset della password inviato via email.")
-    except Exception as e:
-        st.error(f"Errore durante l'invio del link: {e}")
+def main():
+    st.title("Gestione Spese e Budget Personale e Condiviso")
 
-def register_user(first_name, last_name, email, phone, password, confirm_password):
-    if password != confirm_password:
-        st.error("Le password non corrispondono.")
-        return
-    # Controllo base email e telefono duplicati
-    existing_email = supabase.table('allowed_users').select('email').eq('email', email).execute()
-    existing_phone = supabase.table('allowed_users').select('phone_encrypted').eq('phone_encrypted', phone).execute()
-    if existing_email.data and len(existing_email.data) > 0:
-        st.error("Email già registrata.")
-        return
-    if existing_phone.data and len(existing_phone.data) > 0:
-        st.error("Numero di telefono già registrato.")
-        return
-    # Creazione utente con Supabase Auth
-    try:
-        user = supabase.auth.sign_up({"email": email, "password": password})
-        if user.user is not None:
-            # Inserisci dati aggiuntivi nella tabella allowed_users
-            supabase.table('allowed_users').insert({
-                'email': email,
-                'first_name': first_name,
-                'last_name': last_name,
-                'phone_encrypted': phone
-            }).execute()
-            st.success("Registrazione avvenuta con successo! Controlla la tua email per la verifica.")
-        else:
-            st.error("Errore durante la registrazione.")
-    except Exception as e:
-        st.error(f"Errore durante la registrazione: {e}")
+    query_params = st.experimental_get_query_params()
+    page = query_params.get("page", ["main"])[0]
 
-def login():
-    st.markdown("<h1>Gestione Spese e Budget Personale e Condiviso</h1>", unsafe_allow_html=True)
-    with st.container():
+    if page == "register":
+        # Se la pagina è register, reindirizza a register.py (o mostra messaggio)
+        st.info("Sei nella pagina di registrazione. Per favore apri il file register.py.")
+        if st.button("Torna al login"):
+            st.experimental_set_query_params(page="main")
+            st.experimental_rerun()
+        return
+
+    if "user" not in st.session_state:
+        st.markdown("<div class='container'>", unsafe_allow_html=True)
+
         email = st.text_input("Email", placeholder="Inserisci la tua email")
         password = st.text_input("Password", type="password", placeholder="Inserisci la tua password")
         if st.button("Login"):
             if not email or not password:
                 st.warning("Inserisci email e password")
-                return
-            try:
-                user = supabase.auth.sign_in_with_password({"email": email, "password": password})
-                if user.user is not None:
-                    st.session_state["user"] = user.user
-                    st.success("Login effettuato con successo!")
-                else:
-                    st.error("Email o password errati")
-            except Exception as e:
-                st.error(f"Errore durante il login: {e}")
+            else:
+                try:
+                    user = supabase.auth.sign_in_with_password({"email": email, "password": password})
+                    if user.user is not None:
+                        st.session_state["user"] = user.user
+                        st.success("Login effettuato con successo!")
+                    else:
+                        st.error("Email o password errati")
+                except Exception as e:
+                    st.error(f"Errore durante il login: {e}")
 
-def main():
-    if "user" not in st.session_state:
-        st.markdown("<div class='container'>", unsafe_allow_html=True)
-        mode = st.radio("Seleziona un'opzione", ("Login", "Registrati"))
+        st.markdown("---")
+        st.subheader("Hai dimenticato la password?")
+        reset_email = st.text_input("Inserisci la tua email per ricevere il link di reset", key="reset_email")
+        if st.button("Invia link di reset"):
+            if reset_email:
+                try:
+                    response = supabase.auth.reset_password_for_email(reset_email)
+                    if hasattr(response, "error") and response.error:
+                        st.error(f"Errore: {response.error.message}")
+                    else:
+                        st.success("Link per il reset della password inviato via email.")
+                except Exception as e:
+                    st.error(f"Errore durante l'invio del link: {e}")
+            else:
+                st.warning("Inserisci un'email valida")
 
-        if mode == "Login":
-            login()
-            st.markdown("<hr>", unsafe_allow_html=True)
-            st.markdown("<h3>Hai dimenticato la password?</h3>", unsafe_allow_html=True)
-            reset_email = st.text_input("Inserisci la tua email per ricevere il link di reset", key="reset_email")
-            if st.button("Invia link di reset"):
-                if reset_email:
-                    send_password_reset(reset_email)
-                else:
-                    st.warning("Inserisci un'email valida")
-        else:
-            st.markdown("<h3>Registrazione Nuovo Utente</h3>", unsafe_allow_html=True)
-            first_name = st.text_input("Nome")
-            last_name = st.text_input("Cognome")
-            email = st.text_input("Email")
-            phone = st.text_input("Numero di telefono")
-            password = st.text_input("Password", type="password")
-            confirm_password = st.text_input("Conferma Password", type="password")
-            if st.button("Registrati"):
-                register_user(first_name, last_name, email, phone, password, confirm_password)
+        st.markdown("---")
+        if st.button("Registrati"):
+            st.experimental_set_query_params(page="register")
+            st.experimental_rerun()
+
         st.markdown("</div>", unsafe_allow_html=True)
+
     else:
         st.markdown(f"<h2 style='text-align:center; color:#4CAF50;'>Benvenuto {st.session_state['user'].email}!</h2>", unsafe_allow_html=True)
         if st.button("Logout"):
