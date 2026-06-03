@@ -1,2 +1,1 @@
-# finanze-core-modulare
-Gestione_Spese
+"# finanze-core-modulare" 
