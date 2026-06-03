@@ -18,9 +18,9 @@ def show_register_page():
     password = st.text_input("Password", type="password")
     confirm_password = st.text_input("Conferma Password", type="password")
 
-    # Recupera i piani ordinati per prezzo crescente
+    # Recupera i piani ordinati per prezzo crescente (correzione: desc=False)
     try:
-        response = supabase.table('subscription_plans').select('*').order('price_euro', ascending=True).execute()
+        response = supabase.table('subscription_plans').select('*').order('price_euro', desc=False).execute()
         plans = response.data if response.data else []
     except Exception as e:
         st.error(f"Errore nel recupero dei piani di abbonamento: {e}")
@@ -35,13 +35,11 @@ def show_register_page():
     cols = st.columns(len(plans)) if plans else []
     for i, plan in enumerate(plans):
         with cols[i]:
-            # Usa un bottone con stile personalizzato per simulare il quadro cliccabile
             price = plan.get('price_euro', 0)
             duration = plan.get('duration_days', 'N/A')
             description = plan.get('description', '')
             plan_id = plan.get('id')
 
-            # Stile CSS inline per il quadro
             style = """
                 border: 2px solid #4CAF50;
                 border-radius: 12px;
@@ -55,12 +53,10 @@ def show_register_page():
             duration_style = "font-size: 16px; margin-bottom: 10px;"
             description_style = "font-size: 14px; color: #555;"
 
-            # Bottone invisibile per catturare il click
             if st.button(f"", key=f"plan_{plan_id}"):
                 selected_plan_id = plan_id
                 st.session_state['selected_plan'] = plan
 
-            # Render del quadro con HTML e bottone sopra invisibile
             st.markdown(f"""
                 <div style="{style}">
                     <div style="{price_style}">€{price}</div>
@@ -69,13 +65,11 @@ def show_register_page():
                 </div>
             """, unsafe_allow_html=True)
 
-    # Se un piano è stato selezionato
     if 'selected_plan' in st.session_state:
         selected_plan = st.session_state['selected_plan']
         price = selected_plan.get('price_euro', 0)
 
         if price == 0:
-            # Piano gratuito: registra subito l'utente
             if st.button("Conferma registrazione con piano gratuito"):
                 if not (first_name and last_name and email and phone and password and confirm_password):
                     st.warning("Compila tutti i campi.")
@@ -83,10 +77,8 @@ def show_register_page():
                     st.error("Le password non corrispondono.")
                 else:
                     try:
-                        # Registra utente su Supabase Auth
                         user = supabase.auth.sign_up({"email": email, "password": password})
                         if user.user is not None:
-                            # Inserisci dati utente nella tabella allowed_users con piano selezionato
                             supabase.table('allowed_users').insert({
                                 'email': email,
                                 'first_name': first_name,
@@ -95,7 +87,6 @@ def show_register_page():
                                 'plan_id': selected_plan.get('id')
                             }).execute()
                             st.success("Registrazione avvenuta con successo! Puoi ora effettuare il login.")
-                            # Pulisci stato selezione piano per evitare doppie registrazioni
                             del st.session_state['selected_plan']
                         else:
                             st.error("Errore durante la registrazione.")
