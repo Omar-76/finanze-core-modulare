@@ -90,7 +90,7 @@ def show_register_page():
                     st.error(f"Errore durante la registrazione: {e}")
 
     if st.button("Torna al login"):
-        st.experimental_set_query_params(page="main")
+        st.session_state.page = "login"
         st.experimental_rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
