@@ -1,59 +1,47 @@
 import streamlit as st
-from dotenv import load_dotenv
-import os
-from supabase import create_client
+from supabase import create_client, Client
 
-# Carica variabili d'ambiente dal file .env
-load_dotenv()
+# Recupera i segreti da Streamlit Cloud
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# Inizializza il client Supabase
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Crea client Supabase
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-
-def check_user_approved(email: str) -> bool:
-    """Controlla se l'utente è presente e approvato nella tabella allowed_users."""
-    response = supabase.table("allowed_users").select("license_status").eq("email", email).single().execute()
-    if response.error or response.data is None:
-        return False
-    return response.data.get("license_status") == "active"
-
-
+# Funzione per il login
 def login():
     st.title("Login")
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
-    if st.button("Accedi"):
-        auth_response = supabase.auth.sign_in_with_password({"email": email, "password": password})
-        if auth_response.user is not None:
-            if check_user_approved(email):
-                st.success(f"Benvenuto {email}!")
-                st.session_state["logged_in"] = True
-                st.session_state["user_email"] = email
+    if st.button("Login"):
+        if not email or not password:
+            st.warning("Inserisci email e password")
+            return
+        try:
+            # Effettua il login con Supabase Auth
+            user = supabase.auth.sign_in_with_password({"email": email, "password": password})
+            if user.user is not None:
+                st.session_state["user"] = user.user
+                st.success("Login effettuato con successo!")
             else:
-                st.error("Utente non approvato. Contatta l'amministratore.")
-        else:
-            st.error("Email o password errati")
+                st.error("Email o password errati")
+        except Exception as e:
+            st.error(f"Errore durante il login: {e}")
 
-
-
+# Funzione per il logout
 def logout():
-    supabase.auth.sign_out()
-    st.session_state["logged_in"] = False
-    st.session_state["user_email"] = None
-    st.experimental_rerun()
+    if "user" in st.session_state:
+        st.session_state.pop("user")
+        st.success("Logout effettuato")
 
-
+# Funzione principale
 def main():
-    if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
+    if "user" not in st.session_state:
         login()
     else:
-        st.write(f"Sei loggato come {st.session_state['user_email']}")
+        st.write(f"Benvenuto {st.session_state['user'].email}!")
         if st.button("Logout"):
             logout()
-
 
 if __name__ == "__main__":
     main()
