@@ -1,1 +1,5 @@
-"venv/\n__pycache__/\n*.pyc" 
+.env
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
