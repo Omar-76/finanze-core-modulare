@@ -38,16 +38,9 @@ def main():
         layout.page_title("Gestione Spese e Budget Personale e Condiviso")
         layout.page_container_start()
 
-        # Sincronizza input con session_state per autofill
-        if "email_input" not in st.session_state:
-            st.session_state.email_input = ""
-        if "password_input" not in st.session_state:
-            st.session_state.password_input = ""
-
-        email = st.text_input("Email", value=st.session_state.email_input, placeholder="Inserisci la tua email", key="email_input")
+        email = st.text_input("Email", value=st.session_state.get("email_input", ""), placeholder="Inserisci la tua email", key="email_input")
         password = st.text_input("Password", type="password", placeholder="Inserisci la tua password", key="password_input")
 
-        
         if st.button("Login"):
             if not email or not password:
                 st.warning("Inserisci email e password")
@@ -57,7 +50,6 @@ def main():
                     if user.user is not None:
                         st.session_state.user = user.user
                         st.success("Login effettuato con successo!")
-                        # Aggiorna pagina in base al ruolo senza reload
                         if user.user.email == ADMIN_EMAIL:
                             st.session_state.page = "admin"
                         else:
