@@ -18,14 +18,11 @@ def show_main_app(supabase):
 def show_dashboard(supabase):
     st.title("Dashboard")
     st.write("Benvenuto nella dashboard principale.")
-    # Logica dashboard...
 
 def show_profile(supabase):
     st.title("Profilo Utente")
     st.write("Gestisci il tuo profilo qui.")
-    # Logica profilo...
 
 def show_settings(supabase):
     st.title("Impostazioni")
     st.write("Configura le impostazioni dell'app.")
-    # Logica impostazioni...
