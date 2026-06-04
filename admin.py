@@ -1,6 +1,7 @@
 import streamlit as st
 import layout
 
+
 def show_admin_page(supabase):
     st.write("DEBUG: show_admin_page chiamata")
     layout.page_title("Pannello Amministratore")
@@ -48,6 +49,35 @@ def show_admin_page(supabase):
             st.markdown(f"- ID: {plan.get('id')} - {plan.get('plan_type')} - Prezzo: €{plan.get('price_euro')} - Durata: {plan.get('duration_days')} giorni - {plan.get('description')}")
     else:
         st.info("Nessun piano di abbonamento disponibile.")
+
+    st.markdown("---")
+    st.subheader("Aggiungi Nuovo Piano di Abbonamento")
+
+    with st.form("add_plan_form"):
+        plan_type = st.text_input("Tipo di Piano", max_chars=50)
+        price_euro = st.number_input("Prezzo (€)", min_value=0.0, format="%.2f")
+        duration_days = st.number_input("Durata (giorni)", min_value=1, step=1)
+        description = st.text_area("Descrizione", max_chars=300)
+        submitted = st.form_submit_button("Aggiungi Piano")
+
+        if submitted:
+            if not plan_type:
+                st.error("Il tipo di piano è obbligatorio.")
+            else:
+                try:
+                    insert_resp = supabase.table('subscription_plans').insert({
+                        'plan_type': plan_type,
+                        'price_euro': price_euro,
+                        'duration_days': duration_days,
+                        'description': description
+                    }).execute()
+                    if insert_resp.error:
+                        st.error(f"Errore nell'inserimento: {insert_resp.error.message}")
+                    else:
+                        st.success("Piano aggiunto con successo!")
+                        st.experimental_rerun()
+                except Exception as e:
+                    st.error(f"Errore durante l'inserimento: {e}")
 
     st.markdown("---")
     st.subheader("Statistiche e Monitoraggio")
