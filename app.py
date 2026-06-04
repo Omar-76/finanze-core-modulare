@@ -47,10 +47,7 @@ def main():
         email = st.text_input("Email", value=st.session_state.email_input, placeholder="Inserisci la tua email", key="email_input")
         password = st.text_input("Password", type="password", placeholder="Inserisci la tua password", key="password_input")
 
-        # Aggiorna session_state con i valori correnti
-        st.session_state.email_input = email
-        st.session_state.password_input = password
-
+        
         if st.button("Login"):
             if not email or not password:
                 st.warning("Inserisci email e password")
