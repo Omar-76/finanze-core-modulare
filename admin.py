@@ -1,5 +1,6 @@
 import streamlit as st
 import layout
+from datetime import datetime
 
 def show_admin_page(supabase):
     layout.page_title("Pannello Amministratore")
@@ -15,24 +16,28 @@ def show_admin_page(supabase):
 
     if users:
         for user in users:
-            st.markdown(f"- {user.get('email')} - {user.get('first_name', '')} {user.get('last_name', '')} - Piano: {user.get('plan_id', 'Nessuno')} - Accesso: {'Attivo' if user.get('license_status', '') == 'active' else 'Bloccato'}")
+            first_name = user.get('first_name', '')
+            last_name = user.get('last_name', '')
+            license_status = user.get('license_status', '')
+            st.markdown(f"### {first_name} {last_name}")
+            st.markdown(f"- **Stato accesso:** {'Attivo' if license_status == 'active' else 'Bloccato'}")
             col1, col2, col3 = st.columns([1,1,2])
             with col1:
-                if st.button(f"Blocca accesso {user.get('email')}", key=f"block_{user.get('id')}"):
+                if st.button(f"Blocca accesso", key=f"block_{user.get('id')}"):
                     supabase.table('allowed_users').update({'license_status': 'blocked'}).eq('id', user.get('id')).execute()
                     st.experimental_rerun()
             with col2:
-                if st.button(f"Sblocca accesso {user.get('email')}", key=f"unblock_{user.get('id')}"):
+                if st.button(f"Sblocca accesso", key=f"unblock_{user.get('id')}"):
                     supabase.table('allowed_users').update({'license_status': 'active'}).eq('id', user.get('id')).execute()
                     st.experimental_rerun()
             with col3:
-                if st.button(f"Assegna piano gratuito {user.get('email')}", key=f"freeplan_{user.get('id')}"):
-                    supabase.table('allowed_users').update({'plan_id': 1}).eq('id', user.get('id')).execute()
+                if st.button(f"Assegna piano gratuito", key=f"freeplan_{user.get('id')}"):
+                    supabase.table('allowed_users').update({'plan_id': 1, 'plan_start_date': datetime.now().isoformat()}).eq('id', user.get('id')).execute()
                     st.experimental_rerun()
+            st.markdown("---")
     else:
         st.info("Nessun utente registrato.")
 
-    st.markdown("---")
     st.subheader("Gestione Piani di Abbonamento")
     try:
         plans_resp = supabase.table('subscription_plans').select('*').execute()
@@ -43,29 +48,26 @@ def show_admin_page(supabase):
 
     if plans:
         for plan in plans:
-            st.markdown(f"### Piano ID: {plan.get('id')}")
-            col1, col2, col3 = st.columns([3,1,1])
-            with col1:
-                st.write(f"**Tipo:** {plan.get('plan_type')}")
-                st.write(f"**Prezzo:** €{plan.get('price_euro')}")
-                st.write(f"**Durata:** {plan.get('duration_days')} giorni")
-                st.write(f"**Descrizione:** {plan.get('description')}")
-            with col2:
-                if st.button(f"Modifica {plan.get('id')}", key=f"edit_plan_{plan.get('id')}"):
-                    edit_plan_form(supabase, plan)
-            with col3:
-                if st.button(f"Elimina {plan.get('id')}", key=f"delete_plan_{plan.get('id')}"):
-                    confirm = st.confirm(f"Sei sicuro di voler eliminare il piano ID {plan.get('id')}?")
-                    if confirm:
-                        supabase.table('subscription_plans').delete().eq('id', plan.get('id')).execute()
-                        st.success(f"Piano ID {plan.get('id')} eliminato.")
-                        st.experimental_rerun()
+            with st.container():
+                st.markdown(f"### {plan.get('plan_type')}")
+                st.markdown(f"**Prezzo:** €{plan.get('price_euro')}")
+                st.markdown(f"**Durata:** {plan.get('duration_days')} giorni")
+                st.markdown(f"**Descrizione:** {plan.get('description')}")
+                col1, col2 = st.columns([1,1])
+                with col1:
+                    if st.button(f"Modifica", key=f"edit_plan_{plan.get('id')}"):
+                        edit_plan_form(supabase, plan)
+                with col2:
+                    if st.button(f"Elimina", key=f"delete_plan_{plan.get('id')}"):
+                        if st.confirm(f"Sei sicuro di voler eliminare il piano '{plan.get('plan_type')}'?"):
+                            supabase.table('subscription_plans').delete().eq('id', plan.get('id')).execute()
+                            st.success(f"Piano '{plan.get('plan_type')}' eliminato.")
+                            st.experimental_rerun()
+                st.markdown("---")
     else:
         st.info("Nessun piano di abbonamento disponibile.")
 
-    st.markdown("---")
     st.subheader("Aggiungi Nuovo Piano di Abbonamento")
-
     with st.form("add_plan_form"):
         plan_type = st.text_input("Tipo di Piano", max_chars=50)
         price_euro = st.number_input("Prezzo (€)", min_value=0.0, format="%.2f")
@@ -113,7 +115,7 @@ def show_admin_page(supabase):
 
 
 def edit_plan_form(supabase, plan):
-    st.markdown(f"### Modifica Piano ID {plan.get('id')}")
+    st.markdown(f"### Modifica Piano '{plan.get('plan_type')}'")
     with st.form(f"edit_plan_form_{plan.get('id')}"):
         plan_type = st.text_input("Tipo di Piano", value=plan.get('plan_type'), max_chars=50)
         price_euro = st.number_input("Prezzo (€)", value=plan.get('price_euro'), min_value=0.0, format="%.2f")
