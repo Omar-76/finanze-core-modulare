@@ -2,6 +2,7 @@ import streamlit as st
 from supabase import create_client
 import layout
 import admin  # modulo admin separato
+import pages  # modulo per gestione pagine dopo login
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
@@ -32,7 +33,7 @@ def main():
         if st.session_state.user.email == ADMIN_EMAIL:
             st.session_state.page = "admin"
         else:
-            st.session_state.page = "login"
+            st.session_state.page = "main"
 
     if st.session_state.page == "login":
         layout.page_title("Gestione Spese e Budget Personale e Condiviso")
@@ -53,7 +54,7 @@ def main():
                         if user.user.email == ADMIN_EMAIL:
                             st.session_state.page = "admin"
                         else:
-                            st.session_state.page = "login"
+                            st.session_state.page = "main"
                     else:
                         st.error("Email o password errati")
                 except Exception as e:
@@ -80,6 +81,9 @@ def main():
 
     elif st.session_state.page == "admin":
         admin.show_admin_page(supabase)
+
+    elif st.session_state.page == "main":
+        pages.show_main_app(supabase)  # modulo esterno per la sidebar e pagine dopo login
 
     # Pulsante logout visibile solo se utente loggato
     if st.session_state.user is not None:
