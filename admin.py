@@ -25,24 +25,24 @@ def show_admin_page(supabase):
             with col1:
                 if st.button(f"Blocca accesso", key=f"block_{user.get('id')}"):
                     resp = supabase.table('allowed_users').update({'license_status': 'blocked'}).eq('id', user.get('id')).execute()
-                    if 200 <= resp.status_code < 300:
+                    if is_response_success(resp):
                         st.experimental_rerun()
                     else:
-                        st.error(f"Errore nel blocco: status code {resp.status_code}")
+                        st.error(f"Errore nel blocco: {get_response_error(resp)}")
             with col2:
                 if st.button(f"Sblocca accesso", key=f"unblock_{user.get('id')}"):
                     resp = supabase.table('allowed_users').update({'license_status': 'active'}).eq('id', user.get('id')).execute()
-                    if 200 <= resp.status_code < 300:
+                    if is_response_success(resp):
                         st.experimental_rerun()
                     else:
-                        st.error(f"Errore nello sblocco: status code {resp.status_code}")
+                        st.error(f"Errore nello sblocco: {get_response_error(resp)}")
             with col3:
                 if st.button(f"Assegna piano gratuito", key=f"freeplan_{user.get('id')}"):
                     resp = supabase.table('allowed_users').update({'plan_id': 1, 'plan_start_date': datetime.now().isoformat()}).eq('id', user.get('id')).execute()
-                    if 200 <= resp.status_code < 300:
+                    if is_response_success(resp):
                         st.experimental_rerun()
                     else:
-                        st.error(f"Errore nell'assegnazione piano gratuito: status code {resp.status_code}")
+                        st.error(f"Errore nell'assegnazione piano gratuito: {get_response_error(resp)}")
             st.markdown("---")
     else:
         st.info("Nessun utente registrato.")
@@ -70,11 +70,11 @@ def show_admin_page(supabase):
                     if st.button(f"Elimina", key=f"delete_plan_{plan.get('id')}"):
                         if st.confirm(f"Sei sicuro di voler eliminare il piano '{plan.get('plan_type')}'?"):
                             delete_resp = supabase.table('subscription_plans').delete().eq('id', plan.get('id')).execute()
-                            if 200 <= delete_resp.status_code < 300:
+                            if is_response_success(delete_resp):
                                 st.success(f"Piano '{plan.get('plan_type')}' eliminato.")
                                 st.experimental_rerun()
                             else:
-                                st.error(f"Errore durante l'eliminazione: status code {delete_resp.status_code}")
+                                st.error(f"Errore durante l'eliminazione: {get_response_error(delete_resp)}")
                 st.markdown("---")
     else:
         st.info("Nessun piano di abbonamento disponibile.")
@@ -98,11 +98,11 @@ def show_admin_page(supabase):
                         'duration_days': duration_days,
                         'description': description
                     }).execute()
-                    if 200 <= insert_resp.status_code < 300:
+                    if is_response_success(insert_resp):
                         st.success("Piano aggiunto con successo!")
                         st.experimental_rerun()
                     else:
-                        st.error(f"Errore nell'inserimento: status code {insert_resp.status_code}")
+                        st.error(f"Errore nell'inserimento: {get_response_error(insert_resp)}")
                 except Exception as e:
                     st.error(f"Errore durante l'inserimento: {e}")
 
@@ -144,10 +144,33 @@ def edit_plan_form(supabase, plan):
                         'duration_days': duration_days,
                         'description': description
                     }).eq('id', plan.get('id')).execute()
-                    if 200 <= update_resp.status_code < 300:
+                    if is_response_success(update_resp):
                         st.success("Piano aggiornato con successo!")
                         st.experimental_rerun()
                     else:
-                        st.error(f"Errore nell'aggiornamento: status code {update_resp.status_code}")
+                        st.error(f"Errore nell'aggiornamento: {get_response_error(update_resp)}")
                 except Exception as e:
                     st.error(f"Errore durante l'aggiornamento: {e}")
+
+
+def is_response_success(resp):
+    # Controllo robusto per successo: nessun errore e dati presenti
+    if resp is None:
+        return False
+    if hasattr(resp, 'error') and resp.error is not None:
+        return False
+    if hasattr(resp, 'status_code'):
+        return 200 <= resp.status_code < 300
+    # fallback: se c'è data e nessun errore, consideriamo successo
+    if hasattr(resp, 'data') and resp.data is not None:
+        return True
+    return False
+
+def get_response_error(resp):
+    if resp is None:
+        return "Risposta nulla"
+    if hasattr(resp, 'error') and resp.error is not None:
+        return getattr(resp.error, 'message', str(resp.error))
+    if hasattr(resp, 'status_code') and resp.status_code >= 400:
+        return f"Status code {resp.status_code}"
+    return "Errore sconosciuto"
