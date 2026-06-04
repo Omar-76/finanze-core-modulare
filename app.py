@@ -7,7 +7,7 @@ SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-ADMIN_EMAIL = "omarcorio@libero.it"  # Sostituisci con la tua email reale
+ADMIN_EMAIL = "tuo_admin@email.it"  # Sostituisci con la tua email reale
 
 def send_password_reset(email: str):
     try:
@@ -27,22 +27,20 @@ def main():
 
     if "user" in st.session_state:
         user_email = st.session_state["user"].email
-        st.write(f"DEBUG: utente in sessione: {user_email}")
-        if user.user.email == ADMIN_EMAIL:
+        if user_email == ADMIN_EMAIL:
             st.session_state.page = "admin"
-            st.write("DEBUG: pagina impostata su admin")
-            st.experimental_rerun()  # Forza il reload per mostrare subito la pagina admin
-        else:
-            st.session_state.page = "login"
-            st.write("DEBUG: pagina impostata su login")
 
     if st.session_state.page == "login":
         layout.page_title("Gestione Spese e Budget Personale e Condiviso")
         if "user" not in st.session_state:
             layout.page_container_start()
 
-            email = st.text_input("Email", placeholder="Inserisci la tua email")
-            password = st.text_input("Password", type="password", placeholder="Inserisci la tua password")
+            if "email_input" not in st.session_state:
+                st.session_state.email_input = ""
+
+            email = st.text_input("Email", value=st.session_state.email_input, placeholder="Inserisci la tua email", key="email_input")
+            password = st.text_input("Password", type="password", placeholder="Inserisci la tua password", key="password_input")
+
             if st.button("Login"):
                 if not email or not password:
                     st.warning("Inserisci email e password")
@@ -52,13 +50,11 @@ def main():
                         if user.user is not None:
                             st.session_state["user"] = user.user
                             st.success("Login effettuato con successo!")
-                            st.write(f"DEBUG: utente loggato: {user.user.email}")
                             if user.user.email == ADMIN_EMAIL:
                                 st.session_state.page = "admin"
-                                st.write("DEBUG: pagina impostata su admin")
+                                st.experimental_rerun()
                             else:
                                 st.session_state.page = "login"
-                                st.write("DEBUG: pagina impostata su login")
                         else:
                             st.error("Email o password errati")
                     except Exception as e:
