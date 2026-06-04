@@ -7,7 +7,7 @@ SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-ADMIN_EMAIL = "tuo_admin@email.it"  # Sostituisci con la tua email reale
+ADMIN_EMAIL = "omarcorio@libero.it"  # Sostituisci con la tua email reale
 
 def send_password_reset(email: str):
     try:
