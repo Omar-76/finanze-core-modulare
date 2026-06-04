@@ -71,8 +71,10 @@ def show_admin_page(supabase):
                         'duration_days': duration_days,
                         'description': description
                     }).execute()
-                    if insert_resp.error:
-                        st.error(f"Errore nell'inserimento: {insert_resp.error.message}")
+                    if insert_resp.get("error") is not None:
+                        st.error(f"Errore nell'inserimento: {insert_resp['error']['message']}")
+                    elif insert_resp.status_code >= 400:
+                        st.error(f"Errore nell'inserimento: status code {insert_resp.status_code}")
                     else:
                         st.success("Piano aggiunto con successo!")
                         st.experimental_rerun()
