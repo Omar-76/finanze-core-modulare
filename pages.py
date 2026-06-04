@@ -1,10 +1,10 @@
 import streamlit as st
 import admin  # importa il modulo admin
+from datetime import datetime, timedelta
 
 def show_main_app(supabase):
     st.sidebar.title("Menu")
 
-    # Sidebar con dati utente e calcolo giorni mancanti
     user = st.session_state.user
     if user:
         try:
@@ -28,11 +28,9 @@ def show_main_app(supabase):
     else:
         st.sidebar.info("Nessun utente loggato")
 
-    # Controllo semplice per mostrare Admin solo se utente admin
     user_email = user.email if user else ""
     is_admin = (user_email == "tuo_admin@email.it")  # Sostituisci con la tua email admin
 
-    # Definisci le pagine disponibili nella sidebar
     pages = {
         "Dashboard": show_dashboard,
         "Profilo": show_profile,
@@ -48,19 +46,16 @@ def show_main_app(supabase):
 def show_dashboard(supabase):
     st.title("Dashboard")
     st.write("Benvenuto nella dashboard principale.")
-    # Logica dashboard...
 
 
 def show_profile(supabase):
     st.title("Profilo Utente")
     st.write("Gestisci il tuo profilo qui.")
-    # Logica profilo...
 
 
 def show_settings(supabase):
     st.title("Impostazioni")
     st.write("Configura le impostazioni dell'app.")
-    # Logica impostazioni...
 
 
 def get_plan_duration(supabase, plan_id):
@@ -76,9 +71,8 @@ def get_plan_duration(supabase, plan_id):
 
 
 def calculate_days_left(plan_start_date_str, duration_days):
-    from datetime import datetime, timedelta
     if not plan_start_date_str or duration_days is None:
-        return -1  # Indica scaduto o non disponibile
+        return -1
     try:
         plan_start_date = datetime.fromisoformat(plan_start_date_str)
         end_date = plan_start_date + timedelta(days=duration_days + 1)
@@ -90,7 +84,6 @@ def calculate_days_left(plan_start_date_str, duration_days):
 
 
 def format_date(date_str):
-    from datetime import datetime
     if not date_str:
         return "N/D"
     try:
