@@ -25,10 +25,13 @@ def main():
 
     layout.apply_global_style()
 
+    # Se utente già loggato, imposta pagina corretta
     if "user" in st.session_state:
         user_email = st.session_state["user"].email
         if user_email == ADMIN_EMAIL:
             st.session_state.page = "admin"
+        else:
+            st.session_state.page = "login"
 
     if st.session_state.page == "login":
         layout.page_title("Gestione Spese e Budget Personale e Condiviso")
@@ -52,9 +55,9 @@ def main():
                             st.success("Login effettuato con successo!")
                             if user.user.email == ADMIN_EMAIL:
                                 st.session_state.page = "admin"
-                                st.experimental_rerun()
                             else:
                                 st.session_state.page = "login"
+                            st.experimental_rerun()  # Forza reload per aggiornare pagina
                         else:
                             st.error("Email o password errati")
                     except Exception as e:
@@ -72,6 +75,7 @@ def main():
             st.markdown("---")
             if st.button("Registrati"):
                 st.session_state.page = "register"
+                st.experimental_rerun()
 
             layout.page_container_end()
 
