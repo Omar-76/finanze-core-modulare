@@ -1,7 +1,6 @@
 import streamlit as st
 import layout
 
-
 def show_admin_page(supabase):
     layout.page_title("Pannello Amministratore")
     layout.page_container_start()
@@ -28,7 +27,6 @@ def show_admin_page(supabase):
                     st.experimental_rerun()
             with col3:
                 if st.button(f"Assegna piano gratuito {user.get('email')}", key=f"freeplan_{user.get('id')}"):
-                    # Supponiamo id=1 sia il piano gratuito
                     supabase.table('allowed_users').update({'plan_id': 1}).eq('id', user.get('id')).execute()
                     st.experimental_rerun()
     else:
@@ -45,7 +43,23 @@ def show_admin_page(supabase):
 
     if plans:
         for plan in plans:
-            st.markdown(f"- ID: {plan.get('id')} - {plan.get('plan_type')} - Prezzo: €{plan.get('price_euro')} - Durata: {plan.get('duration_days')} giorni - {plan.get('description')}")
+            st.markdown(f"### Piano ID: {plan.get('id')}")
+            col1, col2, col3 = st.columns([3,1,1])
+            with col1:
+                st.write(f"**Tipo:** {plan.get('plan_type')}")
+                st.write(f"**Prezzo:** €{plan.get('price_euro')}")
+                st.write(f"**Durata:** {plan.get('duration_days')} giorni")
+                st.write(f"**Descrizione:** {plan.get('description')}")
+            with col2:
+                if st.button(f"Modifica {plan.get('id')}", key=f"edit_plan_{plan.get('id')}"):
+                    edit_plan_form(supabase, plan)
+            with col3:
+                if st.button(f"Elimina {plan.get('id')}", key=f"delete_plan_{plan.get('id')}"):
+                    confirm = st.confirm(f"Sei sicuro di voler eliminare il piano ID {plan.get('id')}?")
+                    if confirm:
+                        supabase.table('subscription_plans').delete().eq('id', plan.get('id')).execute()
+                        st.success(f"Piano ID {plan.get('id')} eliminato.")
+                        st.experimental_rerun()
     else:
         st.info("Nessun piano di abbonamento disponibile.")
 
@@ -96,3 +110,34 @@ def show_admin_page(supabase):
     st.markdown(f"- Ricavi totali: €{total_revenue}")
 
     layout.page_container_end()
+
+
+def edit_plan_form(supabase, plan):
+    st.markdown(f"### Modifica Piano ID {plan.get('id')}")
+    with st.form(f"edit_plan_form_{plan.get('id')}"):
+        plan_type = st.text_input("Tipo di Piano", value=plan.get('plan_type'), max_chars=50)
+        price_euro = st.number_input("Prezzo (€)", value=plan.get('price_euro'), min_value=0.0, format="%.2f")
+        duration_days = st.number_input("Durata (giorni)", value=plan.get('duration_days'), min_value=1, step=1)
+        description = st.text_area("Descrizione", value=plan.get('description'), max_chars=300)
+        submitted = st.form_submit_button("Salva Modifiche")
+
+        if submitted:
+            if not plan_type:
+                st.error("Il tipo di piano è obbligatorio.")
+            else:
+                try:
+                    update_resp = supabase.table('subscription_plans').update({
+                        'plan_type': plan_type,
+                        'price_euro': price_euro,
+                        'duration_days': duration_days,
+                        'description': description
+                    }).eq('id', plan.get('id')).execute()
+                    if update_resp.get("error") is not None:
+                        st.error(f"Errore nell'aggiornamento: {update_resp['error']['message']}")
+                    elif update_resp.status_code >= 400:
+                        st.error(f"Errore nell'aggiornamento: status code {update_resp.status_code}")
+                    else:
+                        st.success("Piano aggiornato con successo!")
+                        st.experimental_rerun()
+                except Exception as e:
+                    st.error(f"Errore durante l'aggiornamento: {e}")
