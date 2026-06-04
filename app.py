@@ -28,10 +28,12 @@ def main():
     if "user" in st.session_state:
         user_email = st.session_state["user"].email
         st.write(f"DEBUG: utente in sessione: {user_email}")
-        if user_email == ADMIN_EMAIL:
+        if user.user.email == ADMIN_EMAIL:
             st.session_state.page = "admin"
             st.write("DEBUG: pagina impostata su admin")
+            st.experimental_rerun()  # Forza il reload per mostrare subito la pagina admin
         else:
+            st.session_state.page = "login"
             st.write("DEBUG: pagina impostata su login")
 
     if st.session_state.page == "login":
